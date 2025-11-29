@@ -156,3 +156,60 @@ if (progressBar && runner && completionText && animationContainer) {
 
     window.addEventListener('mousemove', handleMove, { passive: true });
 })();
+
+// Gradient infinity glow follows pointer for subtle parallax
+(() => {
+    const infinityBg = document.querySelector('.infinity-bg');
+    const page = document.querySelector('.page');
+
+    if (!infinityBg || !page) {
+        return;
+    }
+
+    const MAX_OFFSET_X = 90;
+    const MAX_OFFSET_Y = 65;
+    const EASING = 0.08;
+    let targetX = 0;
+    let targetY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let pageRect = page.getBoundingClientRect();
+
+    const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+    const updateRect = () => {
+        pageRect = page.getBoundingClientRect();
+    };
+
+    const handlePointerMove = (event) => {
+        const { clientX, clientY } = event;
+
+        if (!pageRect.width || !pageRect.height) {
+            return;
+        }
+
+        const relativeX = (clientX - pageRect.left) / pageRect.width;
+        const relativeY = (clientY - pageRect.top) / pageRect.height;
+
+        const normalizedX = clamp(relativeX - 0.5, -0.5, 0.5) * 2;
+        const normalizedY = clamp(relativeY - 0.5, -0.5, 0.5) * 2;
+
+        targetX = normalizedX * MAX_OFFSET_X;
+        targetY = normalizedY * MAX_OFFSET_Y;
+    };
+
+    const animate = () => {
+        currentX += (targetX - currentX) * EASING;
+        currentY += (targetY - currentY) * EASING;
+
+        infinityBg.style.setProperty('--follow-x', `${currentX}px`);
+        infinityBg.style.setProperty('--follow-y', `${currentY}px`);
+
+        window.requestAnimationFrame(animate);
+    };
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener('resize', updateRect);
+    updateRect();
+    animate();
+})();
